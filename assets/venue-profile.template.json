@@ -1,0 +1,65 @@
+{
+  "$schema": "../references/venue-profile.schema.json",
+  "profile_version": 1,
+  "venue": "REPLACE_WITH_OFFICIAL_VENUE_NAME",
+  "year": 2026,
+  "track": "REPLACE_WITH_EXACT_TRACK_OR_PAPER_TYPE",
+  "mode": "review",
+  "verified_at": "YYYY-MM-DD",
+  "official_sources": [
+    {
+      "title": "REPLACE_WITH_OFFICIAL_AUTHOR_INSTRUCTIONS",
+      "url": "https://REPLACE_WITH_OFFICIAL_URL",
+      "accessed": "YYYY-MM-DD",
+      "supports": [
+        "template",
+        "page_policy",
+        "mode_rules",
+        "pdf",
+        "required_sections"
+      ]
+    }
+  ],
+  "template": {
+    "family": "other",
+    "files": [
+      {
+        "path": "REPLACE_WITH_REQUIRED_STYLE_OR_CLASS_FILE",
+        "required": true,
+        "sha256": ""
+      }
+    ],
+    "required_tex_patterns": [],
+    "forbidden_tex_patterns": []
+  },
+  "page_policy": {
+    "main_page_limit": null,
+    "references_count": null,
+    "appendix_count": null,
+    "total_pdf_limit": null,
+    "notes": "Record exclusions and manual page-boundary checks exactly."
+  },
+  "pdf": {
+    "paper_size": "letter",
+    "columns": 2,
+    "fonts_must_be_embedded": true,
+    "type3_fonts_allowed": false
+  },
+  "mode_rules": {
+    "anonymous": true,
+    "pdf_author_metadata": "empty",
+    "line_numbers": "required",
+    "page_numbers": "venue-controlled"
+  },
+  "content_rules": {
+    "required_sections": [],
+    "required_section_patterns": [],
+    "manual_checks": []
+  },
+  "venue_checker": {
+    "command": "",
+    "required": false,
+    "result": "NOT_RUN",
+    "evidence": ""
+  }
+}

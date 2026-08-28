@@ -1,97 +1,186 @@
 ---
 name: paper-compile-layout-qa
-description: Compile LaTeX conference papers locally and diagnose or fix rendered PDF layout, especially uneven page or column bottoms, unexplained blank bands, heading/list/equation spacing, and figure/table placement. Use for camera-ready compilation and iterative layout QA; do not trigger for prose-only editing or citation-only audits.
+description: Compile, generate, convert, and visually validate LaTeX conference papers against the current official author kit for the exact venue, year, track, and review/final mode. Use when a paper PDF must be both submission-compliant and publication-quality; do not use for prose-only editing or citation-only audits.
+metadata:
+  version: "1.1.0"
+  last_updated: "2026-08-28"
 ---
 
 # Paper Compile and Layout QA
 
-Produce a reproducible PDF whose layout follows the venue template and whose fixes are supported by rendered before/after evidence. A successful TeX exit is necessary but never sufficient.
+Produce a reproducible PDF that follows the exact conference contract and looks
+like a serious paper in that venue. A successful TeX exit is necessary but is
+never evidence of venue compliance or visual readiness by itself.
 
-## Establish the contract
+## Venue-first contract
 
-Before editing, identify:
+Before changing source or compiling, identify the exact:
 
-- target venue, year, track, and review/final/preprint mode;
-- source of truth, main `.tex`, bibliography, style/class files, figures, and repository build command;
-- page limit and whether references, limitations, acknowledgments, and appendices count;
-- whether the request authorizes layout edits, content edits, or both.
+- venue, year, track or paper type, and `review`, `final`, or `preprint` mode;
+- official author-instructions page, official template/author kit, and any
+  separate track or camera-ready instructions;
+- canonical source, main `.tex`, bibliography, figures, style/class files,
+  generator, build command, and expected PDF;
+- page-limit semantics, anonymity mode, required sections/checklists,
+  supplementary rules, paper size, columns, and font requirements;
+- authorization boundary for format-only edits versus content compression.
 
-When venue compliance is requested, verify the current official author instructions or local official kit. Preserve the official style defaults. Do not change the title, abstract, claims, numbers, citations, or author metadata merely to make a page fit unless the user explicitly authorizes content changes.
+Use the current official venue website and author kit as the authority. Search
+the web when the exact current instructions are not already pinned locally.
+Third-party Overleaf templates, prior-year repositories, accepted papers, and
+blog posts are useful diagnostics but cannot establish compliance.
 
-If the LaTeX file is generated from Markdown or another source, edit the real source or generator. Do not make a one-off generated-TeX fix that the next build will erase unless the user explicitly wants that.
+Create a project-level `venue-profile.json` before claiming compliance. Start
+from [assets/venue-profile.template.json](assets/venue-profile.template.json)
+and follow [references/conference-format-workflow.md](references/conference-format-workflow.md).
+Every material rule must identify the official source that supports it. Record
+the SHA-256 of local official style/class files when practical. Unknown or
+conflicting requirements remain explicit blockers; do not guess from the
+conference family or last year's template.
+
+## Inter-skill handoff
+
+This skill owns the official format contract, reproducible compilation,
+source/PDF audit, rendered inspection, and layout fixes. It does not own the
+scientific story or peer-review verdict.
+
+- `$paper-submission-orchestrator` creates or maps the venue profile during
+  intake, references its page-budget assumptions in the approved story packet,
+  and freezes `venue-profile.json`, `format-audit.json`, `BUILD_RECEIPT.md`, and
+  the exact PDF at review and final QA gates.
+- `$academic-paper-reviewer` reads the rendered candidate and may report venue
+  or readability concerns, but remains read-only and never changes templates.
+- `$toppdf`, when available and the user authorizes prose work, may improve
+  paper structure, compression, captions, and overall visual rhythm. This skill
+  remains the authority for the actual author-kit configuration and build.
+
+Input contract: canonical manuscript source, target venue identity, official
+sources or local kit, build root, and requested mode. Output contract:
+`venue-profile.json`, exact build command, compiled PDF, machine-readable
+`format-audit.json`, render evidence, changed-page footprint, and remaining
+manual or external blockers.
+
+## Select and preserve the official template
+
+1. Download or reuse the exact official kit for the selected year and track.
+2. Compare it with the current project before migration: class/style names,
+   mode switches, bibliography style, required sections, and build engine.
+3. Move manuscript content through the template's supported hooks. Do not
+   transplant geometry, heading, caption, line-spacing, or font overrides from
+   a generic template.
+4. Keep review, final, and preprint settings distinct. Never expose author
+   identity in review mode or leave review rulers/line numbers in final mode.
+5. If Markdown or code generates TeX, edit the real source and generator so the
+   next build preserves the official template.
+
+Do not edit an official `.cls` or `.sty` file to make content fit. If a local
+kit file differs from its pinned hash, stop and determine whether the change is
+an intentional official revision or an unauthorized local modification.
 
 ## Compile from the real submission root
 
 1. Prefer the repository's documented build script or Makefile.
-2. Otherwise try `latexmk`; then the appropriate `pdflatex`/`bibtex` cycles; use Tectonic when it is the established local workflow.
-3. Preserve stderr and judge success by the process exit code plus the expected PDF, not by warning-like PowerShell rendering alone.
-4. Record the command, output PDF, page count, and log counts for undefined citations/references, missing files, overfull boxes, and meaningful underfull boxes.
+2. Otherwise use `latexmk`; then the appropriate LaTeX/BibTeX or Biber cycles;
+   use Tectonic only when it is the established project workflow.
+3. Preserve stdout/stderr and judge success by the exit code plus the expected
+   PDF. Record the engine, command, style files, dependency manifest, page
+   count, and log counts.
+4. Require zero missing files and undefined citations/references. Review every
+   overfull box against the rendered page.
+5. Do not overwrite the last known-good final PDF until the candidate passes.
 
-Do not overwrite the user's last known-good final artifact until the revised build passes the final gate. Archive the source and PDF before material layout edits when the user values rollback or asks for change records.
+Run the deterministic preflight after building:
+
+```powershell
+python scripts/conference_format_audit.py `
+  --profile .paper-workflow/venue-profile.json `
+  --project-root . `
+  --tex path/to/main.tex `
+  --pdf path/to/paper.pdf `
+  --output .paper-workflow/format-audit.json
+```
+
+Use `--source-only` before the first successful build. Use `--strict` only for
+the final gate, after warnings have been manually disposed. The audit checks
+profile provenance, pinned template files, dangerous source overrides, required
+patterns/sections, total-page rules when mechanically knowable, PDF page size,
+metadata anonymity, font embedding, and Type 3 fonts. It cannot determine
+whether excluded references or appendices begin on the correct page, prove
+visual beauty, or replace venue-provided checkers.
 
 ## Render before diagnosing
 
-Render the baseline PDF at a fixed DPI. Inspect the page named by the user and also:
+Render the baseline at a fixed DPI and inspect every page for final delivery.
+At minimum during iteration inspect:
 
-- first page and author/abstract block;
-- every page with dense equations, figures, or tables;
-- section boundaries, bibliography start, appendix start, and last page;
-- both column bottoms on two-column pages.
+- first page, title/author/abstract block, and anonymity state;
+- every page containing figures, tables, dense equations, or long algorithms;
+- section boundaries, bibliography start, appendix start, checklist/disclosure
+  pages, and the final page;
+- both column bottoms and all changed pages after a fix.
 
-Classify each defect before editing:
+Classify a defect before editing: official-template mismatch, page-building
+glue, unbreakable block, float queue, asset crop, local heading/list/equation
+spacing, table geometry, font problem, or genuine end-of-section whitespace.
+Read [references/latex-spacing-playbook.md](references/latex-spacing-playbook.md)
+only when layout repair is needed. Read
+[references/visual-quality-gate.md](references/visual-quality-gate.md) for
+publication-quality figure, table, typography, density, and accessibility QA.
 
-- real paragraph break or explicit vertical space;
-- stretched flexible glue caused by `\flushbottom`;
-- unbreakable block such as a minipage, table, list, or kept paragraph;
-- pending float, forced float barrier, or forced column/page break;
-- excess whitespace inside the figure's own bounding box;
-- heading/list/equation/table-cell spacing owned by that local construct;
-- unavoidable residual space at the end of a section or document.
+## Make the smallest owning-layer fix
 
-Do not infer the cause from blank lines in the `.tex` alone. A source blank line creates a paragraph; a large rendered band often comes from page building, floats, or flexible glue instead.
-
-## Fix the owning layer
-
-Use the smallest structural fix that addresses the diagnosed layer. Preserve unrelated layout and official template behavior.
-
-- Prefer natural page building, float placement, block breakability, and content movement over arbitrary `\vspace`.
-- Keep narrative paragraphs and their contribution/list block visually continuous. If residual column space is unavoidable, place it at the column bottom after the logical block rather than between related paragraphs.
-- In two-column final papers, retain venue `\flushbottom` unless there is strong rendered evidence and venue permission for a different global policy. Never introduce global `\raggedbottom` to fix one page.
-- Use `\vfill\newpage` only as a local, verified column-ending tool when the intended consequence is to move residual space to the bottom. In two-column mode, confirm it advances only the intended column and does not cascade later pages.
-- Use minipages or same-page blocks only for short content that genuinely should not split. Re-render immediately because an unbreakable block can create a larger upstream gap.
-- Fix figure whitespace by tightening the source graphic or crop box before adding negative spacing around the float.
-- Fix table header alignment with column types, struts, row height, or cell padding rather than blank rows.
-- Keep equation spacing near official defaults. Use a small local group around exceptional displays rather than redefining global skips for the entire paper.
-- Do not patch global section-heading macros to repair one heading. Diagnose the neighboring float, list, paragraph, or page builder first.
-
-For the ordered fix ladder and LaTeX patterns, read [references/latex-spacing-playbook.md](references/latex-spacing-playbook.md) only when layout changes are needed.
+- Preserve official template defaults. Never change global margins, base font,
+  line spacing, heading macros, or column geometry to recover page budget.
+- Prefer content prioritization, appendix movement, float placement, asset crop,
+  table redesign, and breakability over negative `\vspace` or forced breaks.
+- Keep one-column tables within `\columnwidth` and two-column tables within
+  `\textwidth`; use semantic three-line rules and readable document-matched
+  fonts. Simplify columns before shrinking.
+- Prefer vector plots, tight bounding boxes, legible labels, consistent color
+  semantics, and grayscale-safe distinctions.
+- Treat beauty as constrained clarity: consistent hierarchy, balanced density,
+  aligned edges, readable graphics, stable caption rhythm, and no unexplained
+  holes. Do not cosmetically diverge from the venue style.
+- A content edit made only to fit pages must remain claim-neutral unless the
+  user explicitly authorizes scientific rewriting.
 
 ## Rebuild and prove containment
 
 After each meaningful change:
 
-1. Recompile from the same root.
-2. Confirm page count and log findings.
-3. Render before and after at the same DPI.
-4. Identify every changed rendered page. Use [scripts/pdf_render_diff.py](scripts/pdf_render_diff.py) when Poppler is available.
-5. Inspect the target page, every changed page, and the following page when pagination moved.
-6. If unrelated pages changed, determine whether the cascade is necessary; otherwise revert or narrow the fix.
+1. rebuild from the same root and rerun the audit;
+2. compare page count, logs, hashes, and audit findings;
+3. render before and after at the same DPI;
+4. list every changed page using
+   [scripts/pdf_render_diff.py](scripts/pdf_render_diff.py);
+5. inspect the target page, every changed page, and the following page when
+   pagination moved;
+6. revert or narrow avoidable unrelated cascades.
 
-Do not accept a fix because the target screenshot improved while a figure, table, formula, bibliography, or appendix moved into a worse state.
+Never accept a target-page improvement that makes a later table, figure,
+formula, bibliography, appendix, checklist, or author block worse.
 
 ## Final gate
 
-Before reporting completion, require all applicable items:
+Require all applicable items on the exact candidate:
 
-- official template and final/review mode are correct;
-- page size, margins, columns, page/ruler settings, and page limit are correct;
-- build has no missing files, undefined references/citations, or visible overfull content;
-- all required fonts are embedded when the venue requires it;
-- figures, tables, captions, equations, lists, and headings are readable and not clipped;
-- no unexplained blank band remains inside a logical narrative block;
-- page/column bottoms are as balanced as the template and content reasonably allow;
-- unavoidable end-of-section or last-page whitespace is not disguised with filler text;
-- every page was visually inspected after the final build, or the uninspected scope is stated explicitly;
-- rollback archive and final artifacts are synchronized when requested.
+- official sources are current, recorded, and sufficient for every material
+  profile rule;
+- official template, year, track, and review/final mode are correct;
+- local template hashes match the approved kit;
+- page-limit boundaries, paper size, margins, columns, anonymity, numbering,
+  bibliography style, and required sections/checklists are correct;
+- build and venue-provided checker outputs pass;
+- `conference_format_audit.py --strict` passes or every remaining warning has
+  an explicit manual disposition supported by rendered evidence;
+- all fonts are embedded, no Type 3 font remains when prohibited, and PDF
+  metadata does not leak identity in anonymous mode;
+- figures, tables, captions, equations, links, algorithms, and headings are
+  readable, aligned, unclipped, and visually consistent;
+- every page has been visually inspected after the last build;
+- source, profile, audit JSON, build receipt, render evidence, and PDF hashes
+  describe the same build.
 
-Report the exact layer changed, pages affected, build result, and any remaining intentional whitespace. Never say only “compiled successfully” or “format fixed.”
+Report the official sources consulted, exact files changed, build command,
+audit status, rendered pages inspected, changed-page footprint, and remaining
+blockers. Never report only “compiled successfully” or “format fixed.”
