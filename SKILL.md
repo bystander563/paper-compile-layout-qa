@@ -2,7 +2,7 @@
 name: paper-compile-layout-qa
 description: Compile, generate, convert, and visually validate LaTeX conference papers against the current official author kit for the exact venue, year, track, and review/final mode. Use when a paper PDF must be both submission-compliant and publication-quality; do not use for prose-only editing or citation-only audits.
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   last_updated: "2026-08-28"
 ---
 
@@ -194,3 +194,9 @@ Require all applicable items on the exact candidate:
 Report the official sources consulted, exact files changed, build command,
 audit status, rendered pages inspected, changed-page footprint, and remaining
 blockers. Never report only “compiled successfully” or “format fixed.”
+
+When the caller marks a mapped `format-audit.json` as frozen, rerun verification
+with the same profile, source, PDF, and `--log`, but write `--output` to a
+temporary path. Compare bytes and SHA-256 with the frozen audit. Never overwrite
+the mapped audit during a read-only QA stage; a difference requires reopening
+the editable revision stage.

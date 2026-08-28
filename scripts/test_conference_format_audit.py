@@ -261,6 +261,56 @@ class ConferenceFormatAuditTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("TEMPLATE_HASH_UNPINNED", result.stdout)
 
+    def test_log_required_profile_rejects_omission_and_binds_log(self) -> None:
+        self.profile["layout_rules"]["log_required"] = True
+        self.profile_path.write_text(json.dumps(self.profile), encoding="utf-8")
+        output = self.root / "format-audit.json"
+        omitted = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--profile",
+                str(self.profile_path),
+                "--project-root",
+                str(self.root),
+                "--tex",
+                str(self.tex),
+                "--source-only",
+                "--output",
+                str(output),
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(omitted.returncode, 1)
+        self.assertIn("LOG_REQUIRED", omitted.stdout)
+        log = self.root / "main.log"
+        log.write_text("clean build log\n", encoding="utf-8")
+        supplied = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--profile",
+                str(self.profile_path),
+                "--project-root",
+                str(self.root),
+                "--tex",
+                str(self.tex),
+                "--source-only",
+                "--log",
+                str(log),
+                "--output",
+                str(output),
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(supplied.returncode, 0, supplied.stdout + supplied.stderr)
+        audit = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(audit["log"]["sha256"], digest(log))
+
 
 if __name__ == "__main__":
     unittest.main()
