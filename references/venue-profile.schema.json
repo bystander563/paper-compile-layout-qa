@@ -102,6 +102,36 @@
         "manual_checks": {"type": "array", "items": {"type": "string"}}
       }
     },
+    "layout_rules": {
+      "type": "object",
+      "required": [
+        "body_bottoms",
+        "final_page_columns",
+        "manual_vertical_spacing",
+        "forced_page_breaks",
+        "blank_bands",
+        "column_bottom_tolerance_pt",
+        "blank_band_min_pt",
+        "log_required",
+        "ignore_pages"
+      ],
+      "properties": {
+        "body_bottoms": {"enum": ["template-controlled", "flush", "ragged"]},
+        "final_page_columns": {"enum": ["template-controlled", "balanced", "natural"]},
+        "manual_vertical_spacing": {"enum": ["review", "forbid", "allow"]},
+        "forced_page_breaks": {"enum": ["review", "forbid", "allow"]},
+        "blank_bands": {"enum": ["review", "forbid", "allow"]},
+        "column_bottom_tolerance_pt": {"type": "number", "exclusiveMinimum": 0},
+        "blank_band_min_pt": {"type": "number", "exclusiveMinimum": 0},
+        "log_required": {"type": "boolean"},
+        "ignore_pages": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "uniqueItems": true
+        },
+        "notes": {"type": "string"}
+      }
+    },
     "venue_checker": {
       "type": "object",
       "required": ["command", "required", "result", "evidence"],

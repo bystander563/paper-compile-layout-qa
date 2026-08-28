@@ -16,6 +16,7 @@
         "page_policy",
         "mode_rules",
         "pdf",
+        "layout_rules",
         "required_sections"
       ]
     }
@@ -55,6 +56,18 @@
     "required_sections": [],
     "required_section_patterns": [],
     "manual_checks": []
+  },
+  "layout_rules": {
+    "body_bottoms": "template-controlled",
+    "final_page_columns": "template-controlled",
+    "manual_vertical_spacing": "review",
+    "forced_page_breaks": "review",
+    "blank_bands": "review",
+    "column_bottom_tolerance_pt": 18,
+    "blank_band_min_pt": 48,
+    "log_required": true,
+    "ignore_pages": [],
+    "notes": "Replace template-controlled values only when current official instructions or the pinned kit establish another policy. Ignore pages only with rendered justification."
   },
   "venue_checker": {
     "command": "",

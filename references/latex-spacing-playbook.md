@@ -11,6 +11,13 @@ First distinguish:
 - an upstream gap created by an unbreakable block that no longer fits;
 - a float that reserved or consumed the remaining column space.
 
+Also distinguish **ordinary-page flush bottoms** from **final-page column
+balancing**. `\flushbottom` and `\raggedbottom` control how TeX uses vertical
+glue on pages; they are not universal substitutes for a venue's final-page
+balancing mechanism. `acmart`, IEEEtran, and other conference families can
+have different final-page rules. Preserve the exact author kit and venue
+profile instead of copying a fix from another family.
+
 Preferred order:
 
 1. Let a short paragraph, list, or float break naturally if the logical structure permits it.
@@ -39,6 +46,11 @@ Avoid:
 - manual line breaks whose only purpose is pagination;
 - forcing both bottoms to match when doing so creates a large mid-column hole.
 
+Treat `Underfull \vbox` in the build log as a lead: it often accompanies a
+page that lacks enough acceptable stretch, but only the render shows which
+heading, list, display, float, or paragraph gap absorbed the stretch. Do not
+silence the warning before locating the visible owner.
+
 ## 2. Unexplained blank band between paragraphs
 
 Inspect the source immediately before and after the gap and ask:
@@ -49,6 +61,12 @@ Inspect the source immediately before and after the gap and ask:
 - Is a float or `\FloatBarrier` changing the page builder's choices?
 
 If the gap migrates when one local space is removed, it is usually flexible-glue stretch rather than the literal blank line that was removed. Give TeX a better place for residual space instead of repeatedly deleting normal paragraph separation.
+
+In ordinary LaTeX prose, one or several source blank lines both end the current
+paragraph; they do not request a proportional stack of blank rendered lines.
+An empty line before a list can still activate list separation such as
+`\partopsep`, so inspect the owning environment rather than counting blank
+source lines.
 
 ## 3. Contribution lists and compact enumerations
 

@@ -2,7 +2,7 @@
 name: paper-compile-layout-qa
 description: Compile, generate, convert, and visually validate LaTeX conference papers against the current official author kit for the exact venue, year, track, and review/final mode. Use when a paper PDF must be both submission-compliant and publication-quality; do not use for prose-only editing or citation-only audits.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   last_updated: "2026-08-28"
 ---
 
@@ -97,6 +97,7 @@ python scripts/conference_format_audit.py `
   --project-root . `
   --tex path/to/main.tex `
   --pdf path/to/paper.pdf `
+  --log path/to/main.log `
   --output .paper-workflow/format-audit.json
 ```
 
@@ -104,9 +105,11 @@ Use `--source-only` before the first successful build. Use `--strict` only for
 the final gate, after warnings have been manually disposed. The audit checks
 profile provenance, pinned template files, dangerous source overrides, required
 patterns/sections, total-page rules when mechanically knowable, PDF page size,
-metadata anonymity, font embedding, and Type 3 fonts. It cannot determine
-whether excluded references or appendices begin on the correct page, prove
-visual beauty, or replace venue-provided checkers.
+metadata anonymity, font embedding, Type 3 fonts, TeX vertical-box/float log
+signals, manual spacing/break interventions, and heuristic PDF blank-band and
+column-bottom geometry. Geometry findings identify pages to inspect; they
+cannot determine whether excluded references or appendices begin on the correct
+page, prove visual beauty, or replace venue-provided checkers.
 
 ## Render before diagnosing
 
@@ -122,6 +125,9 @@ At minimum during iteration inspect:
 Classify a defect before editing: official-template mismatch, page-building
 glue, unbreakable block, float queue, asset crop, local heading/list/equation
 spacing, table geometry, font problem, or genuine end-of-section whitespace.
+Treat ordinary-page bottom alignment and final-page column balancing as
+separate venue rules. A source blank line is not proof of a rendered blank
+band, and a level column bottom is not proof that spacing is healthy.
 Read [references/latex-spacing-playbook.md](references/latex-spacing-playbook.md)
 only when layout repair is needed. Read
 [references/visual-quality-gate.md](references/visual-quality-gate.md) for

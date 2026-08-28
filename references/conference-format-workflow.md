@@ -58,6 +58,8 @@ Start from `assets/venue-profile.template.json`. Complete:
 - page policy: main-text limit and whether references, appendices, checklists,
   ethics, limitations, or acknowledgments count;
 - PDF contract: paper size, columns, embedded fonts, and Type 3 policy;
+- layout contract: ordinary-page bottom behavior, final-page column policy,
+  manual-spacing/break policy, and any pages excluded from the geometry probe;
 - anonymity and PDF metadata policy;
 - required sections and any venue-provided checker command.
 
@@ -70,7 +72,51 @@ venue's semantic page boundary.
 over the comment-stripped combined TeX source. Use them for kit-supported mode
 switches, not for brittle sentence wording.
 
-## 5. Recognize families without assuming rules
+## 5. Separate blank space from bottom alignment
+
+Do not treat every white region as an empty line, and do not treat every unequal
+column bottom as a defect. Record the exact venue policy in `layout_rules`:
+
+- `body_bottoms` concerns ordinary full pages. `flush` allows TeX to stretch
+  vertical glue so columns reach a common bottom; `ragged` keeps natural block
+  height; `template-controlled` leaves the official class/style in charge.
+- `final_page_columns` is separate. `balanced` means the venue wants the final
+  two columns coarsely equalized; `natural` permits the document to end in the
+  left or a shorter right column; `template-controlled` preserves the kit.
+- `manual_vertical_spacing`, `forced_page_breaks`, and `blank_bands` decide
+  whether the audit allows, reports, or rejects those interventions/candidates.
+- `ignore_pages` is not a suppression list for convenience. Add a page only
+  after rendering proves that a legitimate full-width figure, references,
+  appendix boundary, checklist, or genuine document ending confuses the
+  heuristic probe.
+
+The distinction matters in real venue families. LaTeX's `\flushbottom`
+stretches available vertical space and can surface `Underfull \vbox` warnings;
+`\raggedbottom` leaves natural bottoms. Current `acmart` has its own last-page
+`balance` behavior, while IEEE guidance asks for coarse last-page equalization.
+ACL instead requires authors to preserve the official style; do not infer an
+ACM or IEEE balancing rule for an ACL-family paper.
+
+Useful primary or package-authoritative references:
+
+- LaTeX layout, floats, page breaks, and vertical space:
+  <https://tug.ctan.org/info/latex2e-help-texinfo/latex2e.html>;
+- current `acmart` class guide and its `balance`/`pbalance` options:
+  <https://www.tug.org/docs/latex/acmart/acmguide.pdf>;
+- IEEEtran last-page column equalization guidance:
+  <https://www.ewh.ieee.org/conf/holm/res/IEEEtran_HOWTO.pdf>;
+- ACL official style and formatting constraints:
+  <https://github.com/acl-org/acl-style-files> and
+  <https://acl-org.github.io/ACLPUB/formatting.html>;
+- `flushend` and `pbalance` package behavior, only when the venue permits them:
+  <https://ctan.org/pkg/flushend> and <https://ctan.org/pkg/pbalance>.
+
+Multiple source blank lines normally express paragraph structure, not a fixed
+rendered gap. A large rendered band more often comes from stretchable glue, an
+unbreakable block, a float queue/barrier, a forced page/column break, or explicit
+vertical space. Diagnose from the log plus the rendered page before editing.
+
+## 6. Recognize families without assuming rules
 
 These signatures help locate the correct instructions; they are not universal
 mode settings:
@@ -86,7 +132,7 @@ mode settings:
 | AAAI | year-specific AAAI author kit | old author kit, unauthorized formatting changes, wrong appendix policy |
 | IEEE | `IEEEtran` or venue-supplied IEEE kit | using a generic IEEE template instead of the event-specific instructions |
 
-## 6. Current official examples that motivate the profile
+## 7. Current official examples that motivate the profile
 
 The following official 2026 instructions were checked on 2026-08-28. Recheck
 them for later years or changed tracks.
@@ -115,7 +161,7 @@ them for later years or changed tracks.
 These examples must not be copied into a later profile without current official
 verification.
 
-## 7. Conversion and generation strategy
+## 8. Conversion and generation strategy
 
 - Existing correct venue source: preserve it and work in place.
 - Prior-year venue source: diff template interfaces, migrate content, rebuild
@@ -131,7 +177,7 @@ verification.
 The generated PDF must come from the canonical path that future revisions will
 rebuild. A one-off TeX export is not a maintainable camera-ready workflow.
 
-## 8. Evidence returned to the orchestrator
+## 9. Evidence returned to the orchestrator
 
 Return:
 
@@ -139,8 +185,11 @@ Return:
 - official source list and unresolved conflicts;
 - exact template file paths and hashes;
 - exact build command and dependency manifest;
+- exact `.log` path/hash and vertical-box/float diagnostic counts;
 - `format-audit.json` path, SHA-256, and status;
 - PDF path, SHA-256, page count, and page-boundary disposition;
+- per-page blank-band candidates, column-bottom deltas, and their rendered
+  dispositions when `layout_rules` enables the geometry probe;
 - venue-provided checker command/result when one exists;
 - render location, pages inspected, changed pages, and manual warning
   dispositions.

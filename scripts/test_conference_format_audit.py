@@ -52,7 +52,14 @@ class ConferenceFormatAuditTests(unittest.TestCase):
                     "title": "Official author guide",
                     "url": "https://example.org/official",
                     "accessed": "2026-08-28",
-                    "supports": ["template", "page_policy", "mode_rules", "pdf", "required_sections"],
+                    "supports": [
+                        "template",
+                        "page_policy",
+                        "mode_rules",
+                        "pdf",
+                        "required_sections",
+                        "layout_rules",
+                    ],
                 }
             ],
             "template": {
@@ -85,6 +92,17 @@ class ConferenceFormatAuditTests(unittest.TestCase):
                 "required_section_patterns": [],
                 "manual_checks": [],
             },
+            "layout_rules": {
+                "body_bottoms": "template-controlled",
+                "final_page_columns": "template-controlled",
+                "manual_vertical_spacing": "review",
+                "forced_page_breaks": "review",
+                "blank_bands": "review",
+                "column_bottom_tolerance_pt": 18,
+                "blank_band_min_pt": 48,
+                "log_required": False,
+                "ignore_pages": [],
+            },
             "venue_checker": {"command": "", "required": False, "result": "NOT_RUN", "evidence": ""},
         }
         self.profile_path = self.root / "venue-profile.json"
@@ -104,6 +122,12 @@ class ConferenceFormatAuditTests(unittest.TestCase):
         MODULE.validate_profile(self.profile, findings)
         self.assertIn("PROFILE_UNSOURCED_RULE", [item.code for item in findings])
 
+    def test_unsourced_layout_rule_is_error(self) -> None:
+        self.profile["official_sources"][0]["supports"].remove("layout_rules")
+        findings = []
+        MODULE.validate_profile(self.profile, findings)
+        self.assertIn("PROFILE_UNSOURCED_RULE", [item.code for item in findings])
+
     def test_template_hash_mismatch_is_error(self) -> None:
         self.profile["template"]["files"][0]["sha256"] = "0" * 64
         findings = []
@@ -117,6 +141,64 @@ class ConferenceFormatAuditTests(unittest.TestCase):
         codes = [item.code for item in findings]
         self.assertIn("TEX_REQUIRED_SECTION", codes)
         self.assertIn("TEX_DANGEROUS_OVERRIDE", codes)
+
+    def test_spacing_break_and_bottom_controls_are_reported(self) -> None:
+        source = (
+            "\\usepackage{venue}\n"
+            "\\vspace{4pt}\n"
+            "\\newpage\n"
+            "\\raggedbottom\n"
+            "\\section{Limitations}Limits.\n"
+        )
+        findings = []
+        MODULE.audit_tex(self.profile, source, findings)
+        codes = [item.code for item in findings]
+        self.assertIn("TEX_MANUAL_VERTICAL_SPACE", codes)
+        self.assertIn("TEX_FORCED_PAGE_BREAK", codes)
+        self.assertIn("TEX_BOTTOM_CONTROL", codes)
+
+    def test_layout_metric_flags_blank_band_and_unbalanced_final_page(self) -> None:
+        self.profile["layout_rules"]["final_page_columns"] = "balanced"
+        metrics = [
+            {
+                "page": 1,
+                "left": {
+                    "word_count": 100,
+                    "largest_internal_blank_band": {
+                        "start_pt": 300.0,
+                        "end_pt": 370.0,
+                        "height_pt": 70.0,
+                    },
+                },
+                "right": {"word_count": 100, "largest_internal_blank_band": None},
+                "column_bottom_delta_pt": 4.0,
+            },
+            {
+                "page": 2,
+                "left": {"word_count": 120, "largest_internal_blank_band": None},
+                "right": {"word_count": 0, "largest_internal_blank_band": None},
+                "column_bottom_delta_pt": None,
+            },
+        ]
+        findings = []
+        MODULE.evaluate_layout_metrics(self.profile["layout_rules"], metrics, findings)
+        codes = [item.code for item in findings]
+        self.assertIn("PDF_BLANK_BAND_CANDIDATE", codes)
+        self.assertIn("PDF_FINAL_COLUMN_UNBALANCED", codes)
+
+    def test_log_audit_reports_vertical_and_float_failures(self) -> None:
+        log = self.root / "main.log"
+        log.write_text(
+            "Underfull \\vbox (badness 10000) has occurred while \\output is active\n"
+            "LaTeX Warning: Float too large for page by 10.0pt\n",
+            encoding="utf-8",
+        )
+        findings = []
+        counts = MODULE.audit_log(log, findings)
+        self.assertEqual(counts["underfull_vbox"], 1)
+        codes = [item.code for item in findings]
+        self.assertIn("LOG_UNDERFULL_VBOX", codes)
+        self.assertIn("LOG_FLOAT_FAILURE", codes)
 
     def test_source_only_cli_writes_bound_audit(self) -> None:
         output = self.root / "format-audit.json"

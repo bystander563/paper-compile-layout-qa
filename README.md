@@ -22,7 +22,8 @@ For standalone use, clone this repository as
 - Poppler's `pdfinfo`, `pdffonts`, and `pdftoppm` on `PATH`, in the bundled
   Codex runtime, or supplied explicitly to the audit/render scripts. The format
   audit falls back to PyMuPDF for page, metadata, and font checks when Poppler's
-  inspection tools are unavailable.
+  inspection tools are unavailable. PyMuPDF also powers the optional two-column
+  blank-band and bottom-geometry probe.
 
 ## Venue-aware use
 
@@ -32,12 +33,16 @@ instructions, then run:
 ```powershell
 python scripts/conference_format_audit.py `
   --profile .paper-workflow/venue-profile.json `
-  --project-root . --tex paper/main.tex --pdf paper/main.pdf `
+  --project-root . --tex paper/main.tex --pdf paper/main.pdf --log paper/main.log `
   --output .paper-workflow/format-audit.json
 ```
 
-The audit is intentionally conservative: semantic page boundaries and visual
-beauty still require rendered inspection.
+The audit distinguishes ordinary-page bottom policy from final-page column
+balancing, reports manual vertical spacing and forced breaks, reads vertical-box
+and float warnings from the LaTeX log, and records heuristic blank-band/bottom
+geometry. It remains intentionally conservative: semantic page boundaries,
+the cause of a whitespace candidate, and visual beauty require rendered
+inspection.
 
 ## Validation
 

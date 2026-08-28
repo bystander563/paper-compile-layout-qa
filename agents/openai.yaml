@@ -1,4 +1,4 @@
 interface:
   display_name: "Paper Compile & Layout QA"
   short_description: "Generate and audit venue-correct, polished conference PDFs."
-  default_prompt: "Use $paper-compile-layout-qa to verify the current official venue kit, build a sourced venue profile, compile this paper, audit format and fonts, and iteratively inspect the rendered PDF."
+  default_prompt: "Use $paper-compile-layout-qa to verify the current official venue kit, build a sourced venue profile, compile this paper, audit format/fonts/logs/column geometry, and iteratively inspect the rendered PDF for blank bands and bottom alignment."

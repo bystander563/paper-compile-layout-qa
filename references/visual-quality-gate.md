@@ -15,6 +15,10 @@ template, not as decorative customization.
   not be separated by unexplained blank bands.
 - In two-column papers, balance column bottoms when the venue style expects it,
   but accept natural final-page or section-ending whitespace.
+- Inspect ordinary-page bottoms and final-page balance as separate checks.
+  Reject unexplained internal white bands before trying to equalize the bottom;
+  a visually level bottom is not a valid repair if it is achieved by stretching
+  a heading, list, equation, or caption gap.
 
 ## Figures
 
