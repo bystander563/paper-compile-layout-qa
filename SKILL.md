@@ -50,6 +50,10 @@ scientific story or peer-review verdict.
   the exact PDF at review and final QA gates.
 - `$academic-paper-reviewer` reads the rendered candidate and may report venue
   or readability concerns, but remains read-only and never changes templates.
+- `$paper-main-figure`, when present and planned by the approved story, consumes
+  the venue profile's exact placement width and returns an editable vector plus
+  placement-size render. This skill verifies the exact export as placed in the
+  manuscript; it does not redraw or reinterpret the scientific topology.
 - `$toppdf`, when available and the user authorizes prose work, may improve
   paper structure, compression, captions, and overall visual rhythm. This skill
   remains the authority for the actual author-kit configuration and build.
