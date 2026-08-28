@@ -299,7 +299,7 @@ MANUAL_VERTICAL_SPACE = (
 FORCED_PAGE_BREAKS = (
     r"\\(?:newpage|clearpage|cleardoublepage|pagebreak)\b",
     r"\\FloatBarrier\b",
-    r"\\begin\s*\{(?:figure|table)\*?\}\s*\[\s*H\s*\]",
+    r"\\begin\s*\{(?:figure|table)\*?\}\s*\[\s*(?-i:H)\s*\]",
 )
 
 BOTTOM_CONTROLS = (
@@ -368,6 +368,22 @@ def audit_tex(profile: dict[str, Any], combined: str, findings: list[Finding]) -
                 "TEX_FORCED_PAGE_BREAK",
                 "forced page, column, float, or barrier placement needs rendered justification",
                 f"count={break_count}",
+            )
+
+        wide_here_count = len(
+            re.findall(
+                r"\\begin\s*\{(?:figure|table)\*\}\s*\[[^]]*h[^]]*\]",
+                combined,
+                re.IGNORECASE | re.MULTILINE,
+            )
+        )
+        if wide_here_count:
+            add(
+                findings,
+                "WARNING",
+                "TEX_WIDE_FLOAT_HERE",
+                "two-column-wide float requests here-placement; standard output routines may defer it and create blank regions",
+                f"count={wide_here_count}",
             )
 
         bottom_count = sum(

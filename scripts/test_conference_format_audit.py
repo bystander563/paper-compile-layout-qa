@@ -157,6 +157,18 @@ class ConferenceFormatAuditTests(unittest.TestCase):
         self.assertIn("TEX_FORCED_PAGE_BREAK", codes)
         self.assertIn("TEX_BOTTOM_CONTROL", codes)
 
+    def test_lowercase_here_is_not_forced_H_but_wide_here_is_reported(self) -> None:
+        source = (
+            "\\usepackage{venue}\n"
+            "\\begin{table*}[h]x\\end{table*}\n"
+            "\\section{Limitations}Limits.\n"
+        )
+        findings = []
+        MODULE.audit_tex(self.profile, source, findings)
+        codes = [item.code for item in findings]
+        self.assertNotIn("TEX_FORCED_PAGE_BREAK", codes)
+        self.assertIn("TEX_WIDE_FLOAT_HERE", codes)
+
     def test_layout_metric_flags_blank_band_and_unbalanced_final_page(self) -> None:
         self.profile["layout_rules"]["final_page_columns"] = "balanced"
         metrics = [

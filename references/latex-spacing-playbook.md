@@ -155,6 +155,10 @@ Inspect table rules, multirow cells, the first/last row padding, caption gap, an
 - `\clearpage`: flush all pending floats and start a page; usually appropriate before appendices only when the venue/package structure needs it.
 - `\newpage`: end the current page or column without flushing all floats.
 - `[H]`: make a float non-floating; use sparingly because it can create upstream gaps.
+- `table*` or `figure*` with `[h]`: standard two-column output routines may not
+  honor here-placement for a full-width float, so the float can be deferred and
+  leave a visually surprising region. Start from the exact kit's supported
+  full-width placement, commonly top placement, and verify the following page.
 
 ## 9. Verification matrix
 
