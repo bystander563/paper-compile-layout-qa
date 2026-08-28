@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Compile & Layout QA"
+  short_description: "Compile papers and fix PDF spacing from rendered evidence."
+  default_prompt: "Use $paper-compile-layout-qa to compile this paper and iteratively fix page-bottom balance, blank gaps, and equation or heading spacing."
